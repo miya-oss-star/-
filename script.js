@@ -10,18 +10,14 @@ const matchSound = new Audio('sounds/ok.mp3');
 cardOpenSound.preload = 'auto';
 matchSound.preload = 'auto';
 
-// 画像リスト（最大6ペア分）
+// 画像リスト
 const allImages = ['dino1.png', 'dino2.png', 'dino3.png', 'dino4.png', 'dino5.png', 'dino6.png'];
 
 function startGame() {
     const pairInput = document.getElementById('pair-count');
-    totalPairs = parseInt(pairInput.value);
-    
-    // 入力チェック（1〜6に制限）
-    if (totalPairs < 1) totalPairs = 1;
-    if (totalPairs > 6) totalPairs = 6;
+    totalPairs = parseInt(pairInput.value) || 4;
 
-    // 画面の切り替え
+    // 画面切り替え
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('result-screen').style.display = 'none';
     
@@ -32,29 +28,33 @@ function startGame() {
     const board = document.getElementById('board');
     board.innerHTML = '';
 
-    // iPadの音対策
-    cardOpenSound.play().then(() => {
-        cardOpenSound.pause();
-        cardOpenSound.currentTime = 0;
-    }).catch(() => {});
+    // カードの並び（列数）をペア数に応じて調整
+    if (totalPairs <= 3) {
+        board.style.gridTemplateColumns = `repeat(${totalPairs}, 160px)`;
+    } else {
+        board.style.gridTemplateColumns = `repeat(3, 160px)`;
+    }
 
-    // 使う分の画像を選んでペアを作る
+    // iPad音対策
+    cardOpenSound.play().then(() => { cardOpenSound.pause(); }).catch(() => {});
+
+    // ペア作成
     let gameImages = [];
     for(let i = 0; i < totalPairs; i++) {
         gameImages.push(allImages[i], allImages[i]);
     }
-
-    // シャッフル
     gameImages.sort(() => Math.random() - 0.5);
 
-    // カード作成
+    // カード作成（CSSのクラス名 .card-inner / .card-back / .card-front に合わせています）
     gameImages.forEach(imgName => {
         const card = document.createElement('div');
         card.classList.add('card');
         card.dataset.info = imgName;
         card.innerHTML = `
-            <div class="front-face" style="background-image: url('images/${imgName}')"></div>
-            <div class="back-face"></div>
+            <div class="card-inner">
+                <div class="card-front" style="background-image: url('images/${imgName}')"></div>
+                <div class="card-back"></div>
+            </div>
         `;
         card.addEventListener('click', flipCard);
         board.appendChild(card);
@@ -62,13 +62,13 @@ function startGame() {
 }
 
 function flipCard() {
-    if (lockBoard) return;
-    if (this === firstCard) return;
+    if (lockBoard || this === firstCard) return;
 
     cardOpenSound.currentTime = 0;
     cardOpenSound.play();
 
-    this.classList.add('flip');
+    // CSSに合わせて .is-flipped を使う
+    this.classList.add('is-flipped');
 
     if (!hasFlippedCard) {
         hasFlippedCard = true;
@@ -86,38 +86,43 @@ function checkForMatch() {
 }
 
 function disableCards() {
-    // 揃った音
     matchSound.currentTime = 0;
     matchSound.play();
 
-    // コレクションに追加
-    const collection = document.getElementById('matched-images-container');
-    const miniImg = document.createElement('img');
-    miniImg.src = `images/${firstCard.dataset.info}`;
-    miniImg.style.width = "50px";
-    collection.appendChild(miniImg);
+    // 揃った時のエフェクトクラスを追加
+    firstCard.classList.add('is-matched-anim');
+    secondCard.classList.add('is-matched-anim');
 
-    matchCount++;
-    document.getElementById('match-count').innerText = matchCount;
+    setTimeout(() => {
+        // コレクションエリアに追加
+        const collection = document.getElementById('matched-images-container');
+        const mini = document.createElement('div');
+        mini.classList.add('matched-item');
+        mini.style.backgroundImage = `url('images/${firstCard.dataset.info}')`;
+        collection.appendChild(mini);
 
-    firstCard.removeEventListener('click', flipCard);
-    secondCard.removeEventListener('click', flipCard);
+        // カードを消す（CSSの .is-matched に合わせる）
+        firstCard.classList.add('is-matched');
+        secondCard.classList.add('is-matched');
 
-    resetBoard();
+        matchCount++;
+        document.getElementById('match-count').innerText = matchCount;
 
-    // クリア判定
-    if (matchCount === totalPairs) {
-        setTimeout(() => {
-            document.getElementById('result-screen').style.display = 'flex';
-        }, 500);
-    }
+        resetBoard();
+
+        if (matchCount === totalPairs) {
+            setTimeout(() => {
+                document.getElementById('result-screen').style.display = 'flex';
+            }, 500);
+        }
+    }, 600);
 }
 
 function unflipCards() {
     lockBoard = true;
     setTimeout(() => {
-        firstCard.classList.remove('flip');
-        secondCard.classList.remove('flip');
+        firstCard.classList.remove('is-flipped');
+        secondCard.classList.remove('is-flipped');
         resetBoard();
     }, 1000);
 }

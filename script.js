@@ -1,105 +1,103 @@
-let firstCard = null;
-let secondCard = null;
+// --- 設定部分 ---
+const cardImages = ['dino1.png', 'dino1.png', 'dino2.png', 'dino2.png', 'dino3.png', 'dino3.png', 'dino4.png', 'dino4.png']; // 使う画像のリスト
+let hasFlippedCard = false;
 let lockBoard = false;
-let matches = 0;
-let totalPairs = 0;
+let firstCard, secondCard;
 
-function startGame() {
-    totalPairs = parseInt(document.getElementById('pair-count').value);
-    if (totalPairs < 1 || totalPairs > 6) return;
+// --- 音の準備 ---
+const cardOpenSound = new Audio('sounds/cardopen.mp3');
+const matchSound = new Audio('sounds/ok.mp3');
 
-    document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('result-screen').style.display = 'none';
-    
-    const board = document.getElementById('board');
-    board.innerHTML = '';
-    document.getElementById('matched-images-container').innerHTML = '';
-    matches = 0;
-    updateScore();
+// iPad/Safari対策：先読みを強制
+cardOpenSound.preload = 'auto';
+matchSound.preload = 'auto';
 
-    // 4枚なら2列、それ以上は3〜4列
-    if (totalPairs <= 2) {
-        board.style.gridTemplateColumns = "repeat(2, 1fr)";
-    } else if (totalPairs <= 4) {
-        board.style.gridTemplateColumns = "repeat(3, 1fr)";
-    } else {
-        board.style.gridTemplateColumns = "repeat(4, 1fr)";
-    }
+// --- ゲームの初期化 ---
+function initGame() {
+    const gameContainer = document.querySelector('.game-container'); // HTMLのクラス名に合わせてね
+    // カードをシャッフル
+    cardImages.sort(() => Math.random() - 0.5);
 
-    let deck = [];
-    for (let i = 1; i <= totalPairs; i++) { deck.push(i, i); }
-    deck.sort(() => Math.random() - 0.5);
-
-    deck.forEach(num => {
+    cardImages.forEach((img) => {
         const card = document.createElement('div');
         card.classList.add('card');
-        card.dataset.num = num;
-        card.innerHTML = `<div class="card-inner"><div class="card-back"></div><div class="card-front" style="background-image: url('images/card${num}.png');"></div></div>`;
-        card.addEventListener('click', () => flipCard(card));
-        board.appendChild(card);
+        card.dataset.info = img; // 判定用の名前を入れる
+        
+        // カードの内側（表と裏）
+        card.innerHTML = `
+            <div class="front-face" style="background-image: url('images/${img}')"></div>
+            <div class="back-face"></div>
+        `;
+        
+        card.addEventListener('click', flipCard);
+        gameContainer.appendChild(card);
     });
 }
 
-function flipCard(card) {
-    if (lockBoard || card === firstCard || card.classList.contains('is-matched')) return;
-    card.classList.add('is-flipped');
-    if (!firstCard) {
-        firstCard = card;
+// --- カードをめくる処理 ---
+function flipCard() {
+    if (lockBoard) return;
+    if (this === firstCard) return;
+
+    // ★ カードをめくる音を鳴らす
+    cardOpenSound.currentTime = 0;
+    cardOpenSound.play();
+
+    this.classList.add('flip');
+
+    if (!hasFlippedCard) {
+        // 1枚目のカード
+        hasFlippedCard = true;
+        firstCard = this;
+        return;
+    }
+
+    // 2枚目のカード
+    secondCard = this;
+    checkForMatch();
+}
+
+// --- 揃ったかどうかの判定 ---
+function checkForMatch() {
+    let isMatch = firstCard.dataset.info === secondCard.dataset.info;
+
+    if (isMatch) {
+        disableCards();
     } else {
-        secondCard = card;
-        checkMatch();
+        unflipCards();
     }
 }
 
-function checkMatch() {
-    if (firstCard.dataset.num === secondCard.dataset.num) {
-        lockBoard = true;
-        firstCard.classList.add('is-matched-anim');
-        secondCard.classList.add('is-matched-anim');
+// --- 揃った時の処理 ---
+function disableCards() {
+    // ★ 揃った時の音を鳴らす
+    // めくる音と重ならないように一瞬遅らせるか、めくる音を止めると綺麗です
+    cardOpenSound.pause(); 
+    matchSound.currentTime = 0;
+    matchSound.play();
 
-        setTimeout(() => {
-            const num = firstCard.dataset.num;
-            firstCard.classList.add('is-matched');
-            secondCard.classList.add('is-matched');
-            
-            addToCollection(num);
-            matches++;
-            updateScore();
+    firstCard.removeEventListener('click', flipCard);
+    secondCard.removeEventListener('click', flipCard);
 
-            if (matches === totalPairs) {
-                // クリア画面を表示
-                document.getElementById('result-screen').style.display = 'flex';
-            }
-            resetBoard();
-        }, 1000);
-    } else {
-        lockBoard = true;
-        setTimeout(() => {
-            firstCard.classList.remove('is-flipped');
-            secondCard.classList.remove('is-flipped');
-            resetBoard();
-        }, 800);
-    }
+    resetBoard();
 }
 
-function addToCollection(num) {
-    const container = document.getElementById('matched-images-container');
-    const img = document.createElement('div');
-    img.classList.add('matched-item');
-    img.style.backgroundImage = `url('images/card${num}.png')`;
-    container.appendChild(img);
+// --- 外れた時の処理 ---
+function unflipCards() {
+    lockBoard = true;
+
+    setTimeout(() => {
+        firstCard.classList.remove('flip');
+        secondCard.classList.remove('flip');
+        resetBoard();
+    }, 1000);
 }
 
-function updateScore() {
-    document.getElementById('match-count').innerText = matches;
-}
-
+// --- 状態をリセット ---
 function resetBoard() {
+    [hasFlippedCard, lockBoard] = [false, false];
     [firstCard, secondCard] = [null, null];
-    lockBoard = false;
 }
 
-function showStartScreen() {
-    document.getElementById('result-screen').style.display = 'none';
-    document.getElementById('start-screen').style.display = 'flex';
-}
+// ゲーム開始
+initGame();

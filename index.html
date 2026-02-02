@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iPad神経衰弱 - 完成版</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="start-screen" class="overlay">
+        <div class="modal">
+            <h1>神経衰弱</h1>
+            <p>使うペアの数を選んでください (1〜6)</p>
+            <input type="number" id="pair-count" value="4" min="1" max="6">
+            <button onclick="startGame()">ゲーム開始</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="overlay" style="display: none;">
+        <div class="modal">
+            <h1 style="color: #d32f2f; font-size: 2rem;">クリア！おめでとう！</h1>
+            <p>すべてのカードが揃いました！</p>
+            <button onclick="showStartScreen()" style="background: #1a237e;">スタート画面へ</button>
+        </div>
+    </div>
+
+    <div id="main-container">
+        <div id="game-area">
+            <div id="score-display">揃った数: <span id="match-count">0</span></div>
+            <div class="game-board" id="board"></div>
+        </div>
+        
+        <div id="collection-area">
+            <h3>コレクション</h3>
+            <div id="matched-images-container"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

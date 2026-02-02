@@ -1,0 +1,159 @@
+/* 全体設定 */
+body {
+    background-color: #2e7d32;
+    margin: 0;
+    font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+    color: white;
+    overflow: hidden;
+}
+
+/* オーバーレイ（スタート・クリア画面） */
+.overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: flex; justify-content: center; align-items: center; z-index: 100;
+}
+
+/* 白い四角枠（モーダル）の復活 */
+.modal {
+    background: white; 
+    color: #333; 
+    padding: 40px; 
+    border-radius: 20px; /* 角を丸く */
+    text-align: center; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5); /* 影をつけて浮き上がらせる */
+    max-width: 90%; /* スマホやiPadからはみ出さないように */
+}
+
+/* 入力枠とボタンを横並びで綺麗に整える */
+.modal input { 
+    padding: 10px; 
+    width: 80px;        
+    font-size: 1.8rem;  
+    text-align: center; 
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    margin-right: 10px; 
+    display: inline-block; /* 高さを揃えやすくする */
+    vertical-align: middle; 
+}
+
+.modal button {
+    padding: 15px 30px; 
+    font-size: 1.4rem; 
+    cursor: pointer;
+    background: #2e7d32; 
+    color: white; 
+    border: none; 
+    border-radius: 8px; 
+    display: inline-block; /* 高さを揃えやすくする */
+    vertical-align: middle;
+}
+/* 枚数選択の入力枠を大きくする */
+.modal input { 
+    padding: 10px; 
+    width: 80px;        /* 横幅を少し広げる */
+    font-size: 1.8rem;  /* 数字をドカンと大きく */
+    text-align: center; /* 数字を真ん中に寄せる */
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    margin-right: 10px; /* ボタンとの間に少し隙間を作る */
+    vertical-align: middle; /* ボタンと高さを揃える */
+}
+
+/* ボタンの高さも合わせる */
+.modal button {
+    padding: 15px 30px; 
+    font-size: 1.4rem; 
+    cursor: pointer;
+    background: #2e7d32; 
+    color: white; 
+    border: none; 
+    border-radius: 8px; 
+    vertical-align: middle;
+}
+
+/* レイアウト */
+#main-container { display: flex; width: 100vw; height: 100vh; }
+
+#game-area { 
+    flex: 1; 
+    position: relative; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+}
+
+#score-display { 
+    position: absolute; top: 20px; right: 20px; 
+    font-size: 1.2rem; background: rgba(0,0,0,0.5); 
+    padding: 8px 20px; border-radius: 30px; 
+}
+
+/* ゲームボードの設定（ここを調整しました） */
+.game-board { 
+    display: grid; 
+    gap: 30px;          /* カード同士の間隔 */
+    padding: 20px; 
+    max-width: none;    /* 制限をなくす */
+    width: auto;        /* 内容に合わせて広がる */
+}
+
+/* カードの設定（ここを調整しました） */
+.card { 
+    width: 160px;       /* カードの横幅を大きく固定 */
+    height: 160px;      /* カードの高さを大きく固定 */
+    perspective: 1000px; 
+    cursor: pointer; 
+    transition: 0.3s;
+}
+
+.card-inner { 
+    position: relative; width: 100%; height: 100%; 
+    transition: transform 0.5s; transform-style: preserve-3d; 
+}
+
+.card.is-flipped .card-inner { transform: rotateY(180deg); }
+
+.card-front, .card-back { 
+    position: absolute; width: 100%; height: 100%; 
+    backface-visibility: hidden; border-radius: 12px; 
+    border: 3px solid white; box-sizing: border-box; 
+}
+
+.card-back { background-color: #1a237e; }
+
+.card-front { 
+    transform: rotateY(180deg); 
+    background-size: cover; 
+    background-position: center; 
+}
+
+/* 揃った時のエフェクト */
+.is-matched-anim { transform: scale(1.1); z-index: 10; transition: 0.5s; }
+.is-matched { visibility: hidden; opacity: 0; transition: 0.5s; }
+
+/* 右側コレクションエリア */
+#collection-area { 
+    width: 140px; background: rgba(255,255,255,0.1); 
+    border-left: 2px solid rgba(255,255,255,0.1); 
+    padding: 15px; display: flex; flex-direction: column; 
+    align-items: center; overflow-y: auto; 
+}
+
+.matched-item { 
+    width: 80px; height: 80px; 
+    background-size: cover; background-position: center; 
+    border: 2px solid white; border-radius: 8px; 
+    margin-bottom: -55px; 
+    box-shadow: 0 -4px 10px rgba(0,0,0,0.4); 
+    margin-bottom: -20px;
+}
+
+/* iPad操作を快適にする魔法の3行 */
+* {
+    touch-action: manipulation;   /* ズームを抑制して反応を速くする */
+    -webkit-user-select: none;    /* 文字選択を防ぐ */
+    -webkit-tap-highlight-color: transparent; /* タップ時の青い枠を消す */
+}

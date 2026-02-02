@@ -4,13 +4,15 @@ let firstCard, secondCard;
 let matchCount = 0;
 let totalPairs = 0;
 
-// 音の準備
-const cardOpenSound = new Audio('sounds/cardopen.mp3');
-const matchSound = new Audio('sounds/ok.mp3');
-cardOpenSound.preload = 'auto';
-matchSound.preload = 'auto';
+/**
+ * iPad対策: 音を鳴らすための専用関数
+ * 使い回さずに毎回新しく生成することで、連続タップでも確実に鳴らします
+ */
+function playSound(filename) {
+    const audio = new Audio(`sounds/${filename}`);
+    audio.play().catch(e => console.log("Audio play prevented:", e));
+}
 
-// ★ここを修正しました！
 const allImages = [
     'card1.png', 
     'card2.png', 
@@ -36,10 +38,11 @@ function startGame() {
     // 列数の調整
     board.style.gridTemplateColumns = totalPairs <= 3 ? `repeat(${totalPairs}, 140px)` : `repeat(3, 140px)`;
 
-    // iPad音対策
-    cardOpenSound.play().then(() => {
-        cardOpenSound.pause();
-        cardOpenSound.currentTime = 0;
+    // 初回のボタンクリック時に「音を鳴らす許可」をブラウザからもらう儀式
+    const silentAudio = new Audio('sounds/cardopen.mp3');
+    silentAudio.volume = 0;
+    silentAudio.play().then(() => {
+        silentAudio.pause();
     }).catch(() => {});
 
     let gameImages = [];
@@ -66,8 +69,9 @@ function startGame() {
 function flipCard() {
     if (lockBoard || this === firstCard) return;
 
-    cardOpenSound.currentTime = 0;
-    cardOpenSound.play();
+    // iPad対策: 関数経由で再生
+    playSound('cardopen.mp3');
+    
     this.classList.add('is-flipped');
 
     if (!hasFlippedCard) {
@@ -86,8 +90,8 @@ function checkForMatch() {
 }
 
 function disableCards() {
-    matchSound.currentTime = 0;
-    matchSound.play();
+    // 揃った時は少し遅らせて音を鳴らすと心地よいです
+    setTimeout(() => playSound('ok.mp3'), 200);
 
     firstCard.classList.add('is-matched-anim');
     secondCard.classList.add('is-matched-anim');

@@ -1,6 +1,8 @@
 let hasFlippedCard = false;
 let lockBoard = false;
 let firstCard, secondCard;
+let matchCount = 0;
+let totalPairs = 0;
 
 // 音の準備
 const cardOpenSound = new Audio('sounds/cardopen.mp3');
@@ -8,55 +10,61 @@ const matchSound = new Audio('sounds/ok.mp3');
 cardOpenSound.preload = 'auto';
 matchSound.preload = 'auto';
 
-// 画像リスト（あなたの画像名に合わせて調整してください）
-const cardImages = [
-    'dino1.png', 'dino1.png', 
-    'dino2.png', 'dino2.png', 
-    'dino3.png', 'dino3.png', 
-    'dino4.png', 'dino4.png'
-];
+// 画像リスト（最大6ペア分）
+const allImages = ['dino1.png', 'dino2.png', 'dino3.png', 'dino4.png', 'dino5.png', 'dino6.png'];
 
-// ★「ゲーム開始」ボタンを押した時に呼ばれる関数
 function startGame() {
-    // 盤面をリセット
-    const gameContainer = document.getElementById('game-container') || document.querySelector('.game-container');
-    if (!gameContainer) {
-        alert("エラー：カードを入れる場所が見つかりません");
-        return;
-    }
-    gameContainer.innerHTML = ''; // 前のカードを消す
+    const pairInput = document.getElementById('pair-count');
+    totalPairs = parseInt(pairInput.value);
     
-    // iPad対策：最初のボタンクリックで音を許可
+    // 入力チェック（1〜6に制限）
+    if (totalPairs < 1) totalPairs = 1;
+    if (totalPairs > 6) totalPairs = 6;
+
+    // 画面の切り替え
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('result-screen').style.display = 'none';
+    
+    // リセット
+    matchCount = 0;
+    document.getElementById('match-count').innerText = matchCount;
+    document.getElementById('matched-images-container').innerHTML = '';
+    const board = document.getElementById('board');
+    board.innerHTML = '';
+
+    // iPadの音対策
     cardOpenSound.play().then(() => {
         cardOpenSound.pause();
         cardOpenSound.currentTime = 0;
-    }).catch(e => console.log("Audio prep waiting for interaction"));
+    }).catch(() => {});
 
-    // シャッフルしてカードを作成
-    const shuffled = [...cardImages].sort(() => Math.random() - 0.5);
-    shuffled.forEach(img => {
-        const card = createCard(img);
-        gameContainer.appendChild(card);
+    // 使う分の画像を選んでペアを作る
+    let gameImages = [];
+    for(let i = 0; i < totalPairs; i++) {
+        gameImages.push(allImages[i], allImages[i]);
+    }
+
+    // シャッフル
+    gameImages.sort(() => Math.random() - 0.5);
+
+    // カード作成
+    gameImages.forEach(imgName => {
+        const card = document.createElement('div');
+        card.classList.add('card');
+        card.dataset.info = imgName;
+        card.innerHTML = `
+            <div class="front-face" style="background-image: url('images/${imgName}')"></div>
+            <div class="back-face"></div>
+        `;
+        card.addEventListener('click', flipCard);
+        board.appendChild(card);
     });
-}
-
-function createCard(img) {
-    const card = document.createElement('div');
-    card.classList.add('card');
-    card.dataset.info = img;
-    card.innerHTML = `
-        <div class="front-face" style="background-image: url('images/${img}')"></div>
-        <div class="back-face"></div>
-    `;
-    card.addEventListener('click', flipCard);
-    return card;
 }
 
 function flipCard() {
     if (lockBoard) return;
     if (this === firstCard) return;
 
-    // めくる音
     cardOpenSound.currentTime = 0;
     cardOpenSound.play();
 
@@ -82,9 +90,27 @@ function disableCards() {
     matchSound.currentTime = 0;
     matchSound.play();
 
+    // コレクションに追加
+    const collection = document.getElementById('matched-images-container');
+    const miniImg = document.createElement('img');
+    miniImg.src = `images/${firstCard.dataset.info}`;
+    miniImg.style.width = "50px";
+    collection.appendChild(miniImg);
+
+    matchCount++;
+    document.getElementById('match-count').innerText = matchCount;
+
     firstCard.removeEventListener('click', flipCard);
     secondCard.removeEventListener('click', flipCard);
+
     resetBoard();
+
+    // クリア判定
+    if (matchCount === totalPairs) {
+        setTimeout(() => {
+            document.getElementById('result-screen').style.display = 'flex';
+        }, 500);
+    }
 }
 
 function unflipCards() {
@@ -99,4 +125,9 @@ function unflipCards() {
 function resetBoard() {
     [hasFlippedCard, lockBoard] = [false, false];
     [firstCard, secondCard] = [null, null];
+}
+
+function showStartScreen() {
+    document.getElementById('result-screen').style.display = 'none';
+    document.getElementById('start-screen').style.display = 'flex';
 }

@@ -10,42 +10,44 @@ const matchSound = new Audio('sounds/ok.mp3');
 cardOpenSound.preload = 'auto';
 matchSound.preload = 'auto';
 
-// 画像リスト
-const allImages = ['dino1.png', 'dino2.png', 'dino3.png', 'dino4.png', 'dino5.png', 'dino6.png'];
+// ★ここを修正しました！
+const allImages = [
+    'card1.png', 
+    'card2.png', 
+    'card3.png', 
+    'card4.png', 
+    'card5.png', 
+    'card6.png'
+];
 
 function startGame() {
     const pairInput = document.getElementById('pair-count');
     totalPairs = parseInt(pairInput.value) || 4;
 
-    // 画面切り替え
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('result-screen').style.display = 'none';
     
-    // リセット
     matchCount = 0;
     document.getElementById('match-count').innerText = matchCount;
     document.getElementById('matched-images-container').innerHTML = '';
     const board = document.getElementById('board');
     board.innerHTML = '';
 
-    // カードの並び（列数）をペア数に応じて調整
-    if (totalPairs <= 3) {
-        board.style.gridTemplateColumns = `repeat(${totalPairs}, 160px)`;
-    } else {
-        board.style.gridTemplateColumns = `repeat(3, 160px)`;
-    }
+    // 列数の調整
+    board.style.gridTemplateColumns = totalPairs <= 3 ? `repeat(${totalPairs}, 140px)` : `repeat(3, 140px)`;
 
     // iPad音対策
-    cardOpenSound.play().then(() => { cardOpenSound.pause(); }).catch(() => {});
+    cardOpenSound.play().then(() => {
+        cardOpenSound.pause();
+        cardOpenSound.currentTime = 0;
+    }).catch(() => {});
 
-    // ペア作成
     let gameImages = [];
     for(let i = 0; i < totalPairs; i++) {
         gameImages.push(allImages[i], allImages[i]);
     }
     gameImages.sort(() => Math.random() - 0.5);
 
-    // カード作成（CSSのクラス名 .card-inner / .card-back / .card-front に合わせています）
     gameImages.forEach(imgName => {
         const card = document.createElement('div');
         card.classList.add('card');
@@ -66,8 +68,6 @@ function flipCard() {
 
     cardOpenSound.currentTime = 0;
     cardOpenSound.play();
-
-    // CSSに合わせて .is-flipped を使う
     this.classList.add('is-flipped');
 
     if (!hasFlippedCard) {
@@ -89,19 +89,16 @@ function disableCards() {
     matchSound.currentTime = 0;
     matchSound.play();
 
-    // 揃った時のエフェクトクラスを追加
     firstCard.classList.add('is-matched-anim');
     secondCard.classList.add('is-matched-anim');
 
     setTimeout(() => {
-        // コレクションエリアに追加
         const collection = document.getElementById('matched-images-container');
         const mini = document.createElement('div');
         mini.classList.add('matched-item');
         mini.style.backgroundImage = `url('images/${firstCard.dataset.info}')`;
         collection.appendChild(mini);
 
-        // カードを消す（CSSの .is-matched に合わせる）
         firstCard.classList.add('is-matched');
         secondCard.classList.add('is-matched');
 
